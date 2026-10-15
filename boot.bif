@@ -1,0 +1,37 @@
+/*
+ * boot.bif — Bootgen Image Format (BIF) file
+ *
+ * Creates BOOT.BIN containing:
+ *   1. FSBL (First Stage Boot Loader) — boots the A9
+ *   2. Our ARM application ELF (sd_mailbox_server.elf)
+ *   3. FPGA bitstream (zybo_rv32i_sd.bit)
+ *
+ * Build command:
+ *   bootgen -image boot.bif -arch zynq -w on -o BOOT.BIN
+ *
+ * FSBL Note:
+ *   The FSBL is provided by Xilinx and is board-specific. You need to
+ *   build it ONCE from Vivado's exported XSA. See scripts/build_fsbl.tcl.
+ *   After that, you never need to touch Vitis again — just reuse the FSBL.
+ *
+ * Alternative (Vitis-free FSBL):
+ *   Use the open-source "PYNQ" FSBL or the prebuilt FSBL from the
+ *   Zybo Z7-10 reference design:
+ *   https://github.com/Digilent/Zybo-Z7-10-base-linux/releases
+ */
+
+the_ROM_image:
+{
+    /* ---- FSBL: First Stage Boot Loader ---- */
+    /* This runs first, initializes DDR + MIO, loads the bitstream and app */
+    [bootloader] fsbl/fsbl.elf
+
+    /* ---- FPGA Bitstream ---- */
+    /* Loaded by FSBL into PL fabric before ARM app runs */
+    zybo_rv32i_sd.bit
+
+    /* ---- ARM Application ELF ---- */
+    /* Our SD mailbox server — auto-started by FSBL after bitstream load */
+    arm_firmware/build/sd_mailbox_server.elf
+}
+
